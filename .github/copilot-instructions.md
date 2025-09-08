@@ -25,6 +25,8 @@ Always reference these instructions first and fallback to search or bash command
 - Dashboard creates optimized production build in `dashboard/dist/`
 
 ### Testing
+- Run working tests: `uv run pytest tests/test_main.py -v` -- takes ~2-4 seconds
+- Full test suite has issues - only run individual test files that work
 - Do not generate test files for now.
 
 ### Code Quality and Linting
@@ -42,7 +44,33 @@ Always reference these instructions first and fallback to search or bash command
 ### Common Issues and Workarounds
 - **Dashboard download fails**: Known issue with "division by zero" error - application still works
 - **Import errors in tests**: Ensure `uv run` is used to run tests in proper environment
-=- **Build timeouts**: Always set appropriate timeouts (10+ minutes for uv sync, 5+ minutes for npm install)
+- **Build timeouts**: Always set appropriate timeouts (10+ minutes for uv sync, 5+ minutes for npm install)
+
+### Validation Scenarios
+- **ALWAYS manually validate changes** by running the application with `uv run main.py`
+- **Test WebUI functionality**: Visit http://localhost:6185 with credentials `astrbot`/`astrbot`
+- **Dashboard validation**: If dashboard shows 404, copy built files: `cp -r dashboard/dist data/`
+- **Plugin loading**: Check logs for successful plugin loading from both `packages/` and `data/plugins/`
+
+## Key Repository Structure
+```
+├── astrbot/           # Core Python application
+├── dashboard/         # Vue.js frontend
+├── packages/          # Built-in plugins
+├── data/             # Runtime data (config, plugins, temp)
+├── tests/            # Test suite (some tests have issues)
+├── main.py           # Application entry point
+├── pyproject.toml    # Python dependencies and config
+└── requirements.txt  # Alternative dependency list
+```
+
+## Measured Build Times (for timeout planning)
+- `uv sync`: 6-8 minutes (NEVER CANCEL - use 10+ minute timeout)
+- `npm install` (dashboard): 45-60 seconds (use 5+ minute timeout)  
+- `npm run build` (dashboard): 25-30 seconds (use 2+ minute timeout)
+- `uv run ruff check .`: <1 second
+- `uv run pytest tests/test_main.py`: 2-4 seconds
+- Application startup: ~3 seconds
 
 ## CI/CD Integration
 - GitHub Actions workflows in `.github/workflows/`
