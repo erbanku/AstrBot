@@ -26,7 +26,7 @@
     "highlight.js": "^11.11.1",
     "js-md5": "^0.8.3",
     "katex": "^0.16.27",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "markdown-it": "^14.1.0",
     "markstream-vue": "^0.0.6",
     "mermaid": "^11.12.2",
@@ -64,7 +64,7 @@
     "sass": "1.66.1",
     "sass-loader": "13.3.2",
     "typescript": "5.1.6",
-    "vite": "4.4.9",
+    "vite": "5.4.21",
     "vue-cli-plugin-vuetify": "2.5.8",
     "vue-tsc": "1.8.8",
     "vuetify-loader": "^2.0.0-alpha.9"
