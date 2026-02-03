@@ -3,13 +3,13 @@ const MainRoutes = {
   meta: {
     requiresAuth: true
   },
-  redirect: '/main/dashboard/default',
+  redirect: '/main/platforms',
   component: () => import('@/layouts/full/FullLayout.vue'),
   children: [
     {
-      name: 'Dashboard',
+      name: 'MainPage',
       path: '/',
-      component: () => import('@/views/dashboards/default/DefaultDashboard.vue')
+      component: () => import('@/views/PlatformPage.vue')
     },
     {
       name: 'Extensions',
@@ -30,11 +30,6 @@ const MainRoutes = {
       name: 'Providers',
       path: '/providers',
       component: () => import('@/views/ProviderPage.vue')
-    },
-    {
-      name: 'ToolUsePage',
-      path: '/tool-use',
-      component: () => import('@/views/ToolUsePage.vue')
     },
     {
       name: 'Configs',
@@ -62,9 +57,55 @@ const MainRoutes = {
       component: () => import('@/views/PersonaPage.vue')
     },
     {
+      name: 'SubAgent',
+      path: '/subagent',
+      component: () => import('@/views/SubAgentPage.vue')
+    },
+    {
+      name: 'CronJobs',
+      path: '/cron',
+      component: () => import('@/views/CronJobPage.vue')
+    },
+    {
       name: 'Console',
       path: '/console',
       component: () => import('@/views/ConsolePage.vue')
+    },
+    {
+      name: 'Trace',
+      path: '/trace',
+      component: () => import('@/views/TracePage.vue')
+    },
+    {
+      name: 'NativeKnowledgeBase',
+      path: '/knowledge-base',
+      component: () => import('@/views/knowledge-base/index.vue'),
+      children: [
+        {
+          path: '',
+          name: 'NativeKBList',
+          component: () => import('@/views/knowledge-base/KBList.vue')
+        },
+        {
+          path: ':kbId',
+          name: 'NativeKBDetail',
+          component: () => import('@/views/knowledge-base/KBDetail.vue'),
+          props: true
+        },
+        {
+          path: ':kbId/document/:docId',
+          name: 'NativeDocumentDetail',
+          component: () => import('@/views/knowledge-base/DocumentDetail.vue'),
+          props: true
+        }
+      ]
+    },
+
+    // 旧版本的知识库路由
+    {
+      name: 'KnowledgeBase',
+      path: '/alkaid/knowledge-base',
+      component: () => import('@/views/alkaid/KnowledgeBase.vue'),
     },
     // {
     //   name: 'Alkaid',
@@ -88,11 +129,6 @@ const MainRoutes = {
     //     }
     //   ]
     // },
-    {
-      name: 'KnowledgeBase',
-      path: '/alkaid/knowledge-base',
-      component: () => import('@/views/alkaid/KnowledgeBase.vue')
-    },
     {
       name: 'Chat',
       path: '/chat',

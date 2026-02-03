@@ -1,11 +1,11 @@
 <script setup>
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import { ref, computed } from 'vue'
-import ListConfigItem from './ListConfigItem.vue'
-import ProviderSelector from './ProviderSelector.vue'
-import PersonaSelector from './PersonaSelector.vue'
-import KnowledgeBaseSelector from './KnowledgeBaseSelector.vue'
+import ConfigItemRenderer from './ConfigItemRenderer.vue'
+import TemplateListEditor from './TemplateListEditor.vue'
 import { useI18n } from '@/i18n/composables'
+import axios from 'axios'
+import { useToast } from '@/utils/toast'
 
 const props = defineProps({
   metadata: {
@@ -19,6 +19,14 @@ const props = defineProps({
   metadataKey: {
     type: String,
     required: true
+  },
+  pluginName: {
+    type: String,
+    default: ''
+  },
+  pathPrefix: {
+    type: String,
+    default: ''
   },
   isEditing: {
     type: Boolean,
@@ -39,6 +47,7 @@ const currentEditingKey = ref('')
 const currentEditingLanguage = ref('json')
 const currentEditingTheme = ref('vs-light')
 let currentEditingKeyIterable = null
+const loadingEmbeddingDim = ref(false)
 
 function openEditorDialog(key, value, theme, language) {
   currentEditingKey.value = key
@@ -48,8 +57,32 @@ function openEditorDialog(key, value, theme, language) {
   dialog.value = true
 }
 
+
 function saveEditedContent() {
   dialog.value = false
+}
+
+async function getEmbeddingDimensions(providerConfig) {
+  if (loadingEmbeddingDim.value) return
+  
+  loadingEmbeddingDim.value = true
+  try {
+    const response = await axios.post('/api/config/provider/get_embedding_dim', {
+      provider_config: providerConfig
+    })
+    
+    if (response.data.status != "error" && response.data.data?.embedding_dimensions) {
+      console.log(response.data.data.embedding_dimensions)
+      providerConfig.embedding_dimensions = response.data.data.embedding_dimensions
+      useToast().success("获取成功: " + response.data.data.embedding_dimensions)
+    } else {
+      useToast().error(response.data.message)
+    }
+  } catch (error) {
+    console.error('Error getting embedding dimensions:', error)
+  } finally {
+    loadingEmbeddingDim.value = false
+  }
 }
 
 function getValueBySelector(obj, selector) {
@@ -78,9 +111,13 @@ function shouldShowItem(itemMeta, itemKey) {
   return true
 }
 
+function getItemPath(key) {
+  return props.pathPrefix ? `${props.pathPrefix}.${key}` : key
+}
+
 function hasVisibleItemsAfter(items, currentIndex) {
   const itemEntries = Object.entries(items)
-  
+
   // 检查当前索引之后是否还有可见的配置项
   for (let i = currentIndex + 1; i < itemEntries.length; i++) {
     const [itemKey, itemValue] = itemEntries[i]
@@ -89,7 +126,7 @@ function hasVisibleItemsAfter(items, currentIndex) {
       return true
     }
   }
-  
+
   return false
 }
 </script>
@@ -125,12 +162,42 @@ function hasVisibleItemsAfter(items, currentIndex) {
         <div v-if="metadata[metadataKey].items[key]?.type === 'object'" class="nested-object">
           <div v-if="metadata[metadataKey].items[key] && !metadata[metadataKey].items[key]?.invisible && shouldShowItem(metadata[metadataKey].items[key], key)" class="nested-container">
             <v-expand-transition>
-              <AstrBotConfig :metadata="metadata[metadataKey].items" :iterable="iterable[key]" :metadataKey="key">
+              <AstrBotConfig
+                :metadata="metadata[metadataKey].items"
+                :iterable="iterable[key]"
+                :metadataKey="key"
+                :pluginName="pluginName"
+                :pathPrefix="getItemPath(key)"
+              >
               </AstrBotConfig>
             </v-expand-transition>
           </div>
         </div>
-        
+
+        <!-- Template List -->
+        <div v-else-if="metadata[metadataKey].items[key]?.type === 'template_list'" class="nested-object w-100">
+          <div v-if="!metadata[metadataKey].items[key]?.invisible && shouldShowItem(metadata[metadataKey].items[key], key)" class="nested-container">
+            <div class="config-section mb-2">
+              <v-list-item-title class="config-title">
+                <span v-if="metadata[metadataKey].items[key]?.description">
+                  {{ metadata[metadataKey].items[key]?.description }}
+                  <span class="property-key">({{ key }})</span>
+                </span>
+                <span v-else>{{ key }}</span>
+              </v-list-item-title>
+              <v-list-item-subtitle class="config-hint">
+                <span v-if="metadata[metadataKey].items[key]?.obvious_hint && metadata[metadataKey].items[key]?.hint" class="important-hint">‼️</span>
+                {{ metadata[metadataKey].items[key]?.hint }}
+              </v-list-item-subtitle>
+            </div>
+            <TemplateListEditor
+              v-model="iterable[key]"
+              :templates="metadata[metadataKey].items[key]?.templates || {}"
+              class="config-field"
+            />
+          </div>
+        </div>
+
         <!-- Regular Property -->
         <template v-else>
           <v-row v-if="!metadata[metadataKey].items[key]?.invisible && shouldShowItem(metadata[metadataKey].items[key], key)" class="config-row">
@@ -145,189 +212,39 @@ function hasVisibleItemsAfter(items, currentIndex) {
                 </v-list-item-title>
 
                 <v-list-item-subtitle class="property-hint">
-                  <span v-if="metadata[metadataKey].items[key]?.obvious_hint && metadata[metadataKey].items[key]?.hint" 
+                  <span v-if="metadata[metadataKey].items[key]?.obvious_hint && metadata[metadataKey].items[key]?.hint"
                         class="important-hint">‼️</span>
                   {{ metadata[metadataKey].items[key]?.hint }}
                 </v-list-item-subtitle>
               </v-list-item>
             </v-col>
 
-            <v-col cols="12" sm="1" class="d-flex align-center type-indicator">
-              <v-chip v-if="!metadata[metadataKey].items[key]?.invisible" 
-                     color="primary" 
-                     label 
-                     size="x-small" 
-                     variant="flat">
-                {{ metadata[metadataKey].items[key]?.type || 'string' }}
-              </v-chip>
-            </v-col>
-
-            <v-col cols="12" sm="5" class="config-input">
-              <div v-if="metadata[metadataKey].items[key]" class="w-100">
-                <!-- Special handling for specific metadata types -->
-                <div v-if="metadata[metadataKey].items[key]?._special === 'select_provider'">
-                  <ProviderSelector 
-                    v-model="iterable[key]"
-                    :provider-type="'chat_completion'"
-                  />
-                </div>
-                <div v-else-if="metadata[metadataKey].items[key]?._special === 'select_provider_stt'">
-                  <ProviderSelector 
-                    v-model="iterable[key]"
-                    :provider-type="'speech_to_text'"
-                  />
-                </div>
-                <div v-else-if="metadata[metadataKey].items[key]?._special === 'select_provider_tts'">
-                  <ProviderSelector 
-                    v-model="iterable[key]"
-                    :provider-type="'text_to_speech'"
-                  />
-                </div>
-                <div v-else-if="metadata[metadataKey].items[key]?._special === 'select_persona'">
-                  <PersonaSelector 
-                    v-model="iterable[key]"
-                  />
-                </div>
-                <div v-else-if="metadata[metadataKey].items[key]?._special === 'select_knowledgebase'">
-                  <KnowledgeBaseSelector 
-                    v-model="iterable[key]"
-                  />
-                </div>
-                <!-- List item with options-->
-                <div v-else-if="metadata[metadataKey].items[key]?.type === 'list' && metadata[metadataKey].items[key]?.options && !metadata[metadataKey].items[key]?.invisible && metadata[metadataKey].items[key]?.render_type === 'checkbox'" 
-                  class="d-flex flex-wrap gap-20">
-                  <v-checkbox
-                    v-for="(option, index) in metadata[metadataKey].items[key]?.options"
-                    v-model="iterable[key]"
-                    :label="metadata[metadataKey].items[key]?.labels ? metadata[metadataKey].items[key].labels[index] : option"
-                    :value="option"
-                    class="mr-2"
-                    color="primary"
-                    hide-details
-                  ></v-checkbox>
-                </div>
-                <!-- List item with options-->
-                <v-combobox
-                  v-else-if="metadata[metadataKey].items[key]?.type === 'list' && metadata[metadataKey].items[key]?.options && !metadata[metadataKey].items[key]?.invisible"
-                  v-model="iterable[key]"
-                  :items="metadata[metadataKey].items[key]?.options"
-                  :disabled="metadata[metadataKey].items[key]?.readonly"
-                  density="compact"
-                  variant="outlined"
-                  class="config-field"
-                  hide-details
-                  chips
-                  multiple
-                ></v-combobox>
-                <!-- Select input -->
-                <v-select
-                  v-else-if="metadata[metadataKey].items[key]?.options && !metadata[metadataKey].items[key]?.invisible"
-                  v-model="iterable[key]"
-                  :items="metadata[metadataKey].items[key]?.options"
-                  :disabled="metadata[metadataKey].items[key]?.readonly"
-                  density="compact"
-                  variant="outlined"
-                  class="config-field"
-                  hide-details
-                ></v-select>
-
-                <!-- Code Editor with Full Screen Option -->
-                <div v-else-if="metadata[metadataKey].items[key]?.editor_mode && !metadata[metadataKey].items[key]?.invisible" class="editor-container">
-                  <VueMonacoEditor 
-                    :theme="metadata[metadataKey].items[key]?.editor_theme || 'vs-light'" 
-                    :language="metadata[metadataKey].items[key]?.editor_language || 'json'"
-                    style="min-height: 100px; flex-grow: 1; border: 1px solid rgba(0, 0, 0, 0.1);" 
-                    v-model:value="iterable[key]"
-                  >
-                  </VueMonacoEditor>
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    class="editor-fullscreen-btn"
-                    @click="openEditorDialog(key, iterable, metadata[metadataKey].items[key]?.editor_theme, metadata[metadataKey].items[key]?.editor_language)"
-                    :title="t('core.common.editor.fullscreen')"
-                  >
-                    <v-icon>mdi-fullscreen</v-icon>
-                  </v-btn>
-                </div>
-                
-                <!-- String input -->
-                <v-text-field
-                  v-else-if="metadata[metadataKey].items[key]?.type === 'string' && !metadata[metadataKey].items[key]?.invisible"
-                  v-model="iterable[key]"
-                  density="compact"
-                  variant="outlined"
-                  class="config-field"
-                  hide-details
-                ></v-text-field>
-                
-                <!-- Numeric input -->
-                <v-text-field
-                  v-else-if="(metadata[metadataKey].items[key]?.type === 'int' || metadata[metadataKey].items[key]?.type === 'float') && !metadata[metadataKey]?.invisible"
-                  v-model="iterable[key]"
-                  density="compact"
-                  variant="outlined"
-                  class="config-field"
-                  type="number"
-                  hide-details
-                ></v-text-field>
-                
-                <!-- Text area -->
-                <v-textarea
-                  v-else-if="metadata[metadataKey].items[key]?.type === 'text' && !metadata[metadataKey].items[key]?.invisible"
-                  v-model="iterable[key]"
-                  variant="outlined"
-                  rows="3"
-                  class="config-field"
-                  hide-details
-                ></v-textarea>
-                
-                <!-- Boolean switch -->
-                <v-switch
-                  v-else-if="metadata[metadataKey].items[key]?.type === 'bool' && !metadata[metadataKey].items[key]?.invisible"
-                  v-model="iterable[key]"
-                  color="primary"
-                  inset
-                  density="compact"
-                  hide-details
-                ></v-switch>
-                
-                <!-- List item -->
-                <ListConfigItem
-                  v-else-if="metadata[metadataKey].items[key]?.type === 'list' && !metadata[metadataKey].items[key]?.invisible"
-                  v-model="iterable[key]"
-                  class="config-field"
-                />
-              </div>
-              
-              <!-- Fallback for unknown metadata -->
-              <div v-else class="w-100">
-                <v-text-field 
-                  v-model="iterable[key]" 
-                  :label="key" 
-                  density="compact"
-                  variant="outlined"
-                  class="config-field"
-                  hide-details
-                ></v-text-field>
-              </div>
+            <v-col cols="12" sm="6" class="config-input">
+              <ConfigItemRenderer
+                v-model="iterable[key]"
+                :item-meta="metadata[metadataKey].items[key] || null"
+                :plugin-name="pluginName"
+                :config-key="getItemPath(key)"
+                :loading="loadingEmbeddingDim"
+                :show-fullscreen-btn="!!metadata[metadataKey].items[key]?.editor_mode"
+                @get-embedding-dim="getEmbeddingDimensions(iterable)"
+                @open-fullscreen="openEditorDialog(key, iterable, metadata[metadataKey].items[key]?.editor_theme, metadata[metadataKey].items[key]?.editor_language)"
+              />
             </v-col>
           </v-row>
 
-          <v-divider 
+          <v-divider
             v-if="hasVisibleItemsAfter(filteredIterable, index) && !metadata[metadataKey].items[key]?.invisible && shouldShowItem(metadata[metadataKey].items[key], key)"
             class="config-divider"
           ></v-divider>
         </template>
       </div>
     </div>
-    
+
     <!-- Simple Value Configuration -->
     <div v-else class="simple-config">
       <v-row class="config-row">
-        <v-col cols="12" sm="6" class="property-info">
+        <v-col cols="12" sm="7" class="property-info">
           <v-list-item density="compact">
             <v-list-item-title class="property-name">
               {{ metadata[metadataKey]?.description }}
@@ -341,79 +258,20 @@ function hasVisibleItemsAfter(items, currentIndex) {
           </v-list-item>
         </v-col>
 
-        <v-col cols="12" sm="1" class="d-flex align-center type-indicator">
-          <v-chip v-if="!metadata[metadataKey]?.invisible" 
-                 color="primary" 
-                 label 
-                 size="x-small"
-                 variant="flat">
-            {{ metadata[metadataKey]?.type }}
-          </v-chip>
-        </v-col>
-
         <v-col cols="12" sm="5" class="config-input">
-          <div class="w-100">
-            <!-- Select input -->
-            <v-select
-              v-if="metadata[metadataKey]?.options && !metadata[metadataKey]?.invisible"
-              v-model="iterable[metadataKey]"
-              :items="metadata[metadataKey]?.options"
-              :disabled="metadata[metadataKey]?.readonly"
-              density="compact"
-              variant="outlined"
-              class="config-field"
-              hide-details
-            ></v-select>
-            
-            <!-- String input -->
-            <v-text-field
-              v-else-if="metadata[metadataKey]?.type === 'string' && !metadata[metadataKey]?.invisible"
-              v-model="iterable[metadataKey]"
-              density="compact"
-              variant="outlined"
-              class="config-field"
-              hide-details
-            ></v-text-field>
-            
-            <!-- Numeric input -->
-            <v-text-field
-              v-else-if="(metadata[metadataKey]?.type === 'int' || metadata[metadataKey]?.type === 'float') && !metadata[metadataKey]?.invisible"
-              v-model="iterable[metadataKey]"
-              density="compact"
-              variant="outlined"
-              class="config-field"
-              type="number"
-              hide-details
-            ></v-text-field>
-            
-            <!-- Text area -->
-            <v-textarea
-              v-else-if="metadata[metadataKey]?.type === 'text' && !metadata[metadataKey]?.invisible"
-              v-model="iterable[metadataKey]"
-              variant="outlined"
-              auto-grow
-              rows="3"
-              class="config-field"
-              hide-details
-            ></v-textarea>
-            
-            <!-- Boolean switch -->
-            <v-switch
-              v-else-if="metadata[metadataKey]?.type === 'bool' && !metadata[metadataKey]?.invisible"
-              v-model="iterable[metadataKey]"
-              color="primary"
-              inset
-              density="compact"
-              hide-details
-            ></v-switch>
-            
-            <!-- List item -->
-            <ListConfigItem 
-              v-else-if="metadata[metadataKey]?.type === 'list' && !metadata[metadataKey]?.invisible"
-              v-model="iterable[metadataKey]"
-              class="config-field"
-            />
-          </div>
+          <TemplateListEditor
+            v-if="metadata[metadataKey]?.type === 'template_list' && !metadata[metadataKey]?.invisible"
+            v-model="iterable[metadataKey]"
+            :templates="metadata[metadataKey]?.templates || {}"
+            class="config-field"
+          />
+          <ConfigItemRenderer
+            v-else
+            v-model="iterable[metadataKey]"
+            :item-meta="metadata[metadataKey]"
+            :plugin-name="pluginName"
+            :config-key="getItemPath(metadataKey)"
+          />
         </v-col>
       </v-row>
 
@@ -435,9 +293,9 @@ function hasVisibleItemsAfter(items, currentIndex) {
         </v-toolbar-items>
       </v-toolbar>
       <v-card-text class="pa-0">
-        <VueMonacoEditor 
+        <VueMonacoEditor
           :theme="currentEditingTheme"
-          :language="currentEditingLanguage" 
+          :language="currentEditingLanguage"
           style="height: calc(100vh - 64px);"
           v-model:value="currentEditingKeyIterable[currentEditingKey]"
         >
@@ -470,6 +328,7 @@ function hasVisibleItemsAfter(items, currentIndex) {
   font-size: 0.85em;
   opacity: 0.7;
   font-weight: normal;
+  display: none;
 }
 
 .important-hint {
@@ -503,7 +362,6 @@ function hasVisibleItemsAfter(items, currentIndex) {
   align-items: center;
   padding: 4px 8px;
   border-radius: 4px;
-  transition: background-color 0.2s;
 }
 
 .config-row:hover {
@@ -540,8 +398,8 @@ function hasVisibleItemsAfter(items, currentIndex) {
 }
 
 .config-divider {
-  border-color: rgba(0, 0, 0, 0.1);
-  margin: 4px 0;
+  border-color: rgba(0, 0, 0, 0.05);
+  margin: 0px 16px;
 }
 
 .editor-container {
@@ -567,11 +425,11 @@ function hasVisibleItemsAfter(items, currentIndex) {
   .nested-object {
     padding-left: 8px;
   }
-  
+
   .config-row {
     padding: 8px 0;
   }
-  
+
   .property-info, .type-indicator, .config-input {
     padding: 4px;
   }

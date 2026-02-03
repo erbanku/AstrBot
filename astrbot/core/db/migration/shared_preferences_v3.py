@@ -1,9 +1,11 @@
 import json
 import os
 from typing import TypeVar
+
 from astrbot.core.utils.astrbot_path import get_astrbot_data_path
 
 _VT = TypeVar("_VT")
+
 
 class SharedPreferences:
     def __init__(self, path=None):
@@ -15,7 +17,7 @@ class SharedPreferences:
     def _load_preferences(self):
         if os.path.exists(self.path):
             try:
-                with open(self.path, "r") as f:
+                with open(self.path) as f:
                     return json.load(f)
             except json.JSONDecodeError:
                 os.remove(self.path)
@@ -41,5 +43,6 @@ class SharedPreferences:
     def clear(self):
         self._data.clear()
         self._save_preferences()
+
 
 sp = SharedPreferences()

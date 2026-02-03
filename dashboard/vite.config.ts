@@ -19,6 +19,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      mermaid: 'mermaid/dist/mermaid.js',
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
@@ -39,7 +40,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:6185/',
+        target: 'http://127.0.0.1:6185/',
         changeOrigin: true,
       }
     }

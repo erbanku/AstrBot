@@ -1,6 +1,11 @@
 <template>
     <div class="flex-grow-1" style="display: flex; flex-direction: column; height: 100%;">
         <div style="flex-grow: 1; width: 100%; border: 1px solid #eee; border-radius: 8px; padding: 16px">
+            <v-banner lines="one">
+                <template v-slot:text>
+                    建议您更换使用新版知识库功能。
+                </template>
+            </v-banner>
             <!-- knowledge card -->
             <div v-if="!installed" class="d-flex align-center justify-center flex-column"
                 style="flex-grow: 1; width: 100%; height: 100%;">
@@ -105,9 +110,9 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn color="error" variant="text" @click="showCreateDialog = false">{{ tm('createDialog.cancel')
-                    }}</v-btn>
+                        }}</v-btn>
                     <v-btn color="primary" variant="text" @click="submitCreateForm">{{ tm('createDialog.create')
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -132,7 +137,7 @@
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" variant="text" @click="showEmojiPicker = false">{{ tm('emojiPicker.close')
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -159,8 +164,8 @@
                     <v-chip v-if="currentKB.rerank_provider_id" color="tertiary" variant="tonal" size="small"
                         rounded="sm">
                         <v-icon start size="small">mdi-sort-variant</v-icon>
-                        重排序模型: {{ rerankProviderConfigs.
-                            find(provider => provider.id === currentKB.rerank_provider_id)?.rerank_model || '未设置' }}
+                        重排序模型: {{rerankProviderConfigs.
+                            find(provider => provider.id === currentKB.rerank_provider_id)?.rerank_model || '未设置'}}
                     </v-chip>
                     <small style="margin-left: 8px;">💡 使用方式: 在聊天页中输入 "/kb use {{ currentKB.collection_name }}"</small>
                 </div>
@@ -411,7 +416,7 @@
                     <v-spacer></v-spacer>
                     <v-btn color="grey-darken-1" variant="text" @click="showDeleteDialog = false">{{
                         tm('deleteDialog.cancel')
-                    }}</v-btn>
+                        }}</v-btn>
                     <v-btn color="error" variant="text" @click="deleteKnowledgeBase" :loading="deleting">{{
                         tm('deleteDialog.delete') }}</v-btn>
                 </v-card-actions>
@@ -575,6 +580,12 @@ export default {
         this.getProviderList();
     },
     methods: {
+        getSelectedGitHubProxy() {
+            if (typeof window === "undefined" || !window.localStorage) return "";
+            return localStorage.getItem("githubProxyRadioValue") === "1"
+                ? localStorage.getItem("selectedGitHubProxy") || ""
+                : "";
+        },
         llmModelProps(providerConfig) {
             return {
                 title: providerConfig.llm_model || providerConfig.id,
@@ -601,8 +612,14 @@ export default {
         checkPlugin() {
             axios.get('/api/plugin/get?name=astrbot_plugin_knowledge_base')
                 .then(response => {
-                    if (response.data.status !== 'ok') {
+                    if (response.data.status !== 'ok' || response.data.data.length === 0) {
                         this.showSnackbar(this.tm('messages.pluginNotAvailable'), 'error');
+                        this.installed = false;
+                        return
+                    }
+                    if (!response.data.data[0].activated) {
+                        this.showSnackbar(this.tm('messages.pluginNotActivated'), 'error');
+                        return
                     }
                     if (response.data.data.length > 0) {
                         this.installed = true;
@@ -664,7 +681,7 @@ export default {
             try {
                 const response = await axios.post('/api/plugin/update', {
                     name: 'astrbot_plugin_knowledge_base',
-                    proxy: localStorage.getItem('selectedGitHubProxy') || ""
+                    proxy: this.getSelectedGitHubProxy()
                 });
 
                 if (response.data.status === 'ok') {
@@ -688,7 +705,7 @@ export default {
             this.installing = true;
             axios.post('/api/plugin/install', {
                 url: "https://github.com/lxfight/astrbot_plugin_knowledge_base",
-                proxy: localStorage.getItem('selectedGitHubProxy') || ""
+                proxy: this.getSelectedGitHubProxy()
             })
                 .then(response => {
                     if (response.data.status === 'ok') {
@@ -708,6 +725,10 @@ export default {
         getKBCollections() {
             axios.get('/api/plug/alkaid/kb/collections')
                 .then(response => {
+                    if (response.data.status !== 'ok') {
+                        this.showSnackbar(response.data.message || this.tm('messages.getKnowledgeBaseListFailed'), 'error');
+                        return;
+                    }
                     this.kbCollections = response.data.data;
                 })
                 .catch(error => {
@@ -718,10 +739,10 @@ export default {
 
         createCollection(name, emoji, description) {
             // 如果 this.newKB.embedding_provider_id 是 Object
-            if (typeof this.newKB.embedding_provider_id === 'object') {
+            if (this.newKB.embedding_provider_id && typeof this.newKB.embedding_provider_id === 'object') {
                 this.newKB.embedding_provider_id = this.newKB.embedding_provider_id.id || '';
             }
-            if (typeof this.newKB.rerank_provider_id === 'object') {
+            if (this.newKB.rerank_provider_id && typeof this.newKB.rerank_provider_id === 'object') {
                 this.newKB.rerank_provider_id = this.newKB.rerank_provider_id.id || '';
             }
             axios.post('/api/plug/alkaid/kb/create_collection', {

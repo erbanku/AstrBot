@@ -19,14 +19,9 @@ export interface menu {
 // 所有键名都使用 core.navigation.* 格式
 const sidebarItem: menu[] = [
   {
-    title: 'core.navigation.dashboard',
-    icon: 'mdi-view-dashboard',
-    to: '/dashboard/default'
-  },
-  {
     title: 'core.navigation.platforms',
-    icon: 'mdi-message-processing',
-    to: '/platforms',
+    icon: 'mdi-robot',
+    to: '/',
   },
   {
     title: 'core.navigation.providers',
@@ -34,14 +29,9 @@ const sidebarItem: menu[] = [
     to: '/providers',
   },
   {
-    title: 'core.navigation.toolUse',
-    icon: 'mdi-function-variant',
-    to: '/tool-use'
-  },
-  {
-    title: 'core.navigation.persona',
-    icon: 'mdi-heart',
-    to: '/persona'
+    title: 'core.navigation.config',
+    icon: 'mdi-cog',
+    to: '/config',
   },
   {
     title: 'core.navigation.extension',
@@ -50,34 +40,55 @@ const sidebarItem: menu[] = [
   },
   {
     title: 'core.navigation.knowledgeBase',
-    icon: 'mdi-text-box-search',
-    to: '/alkaid/knowledge-base',
+    icon: 'mdi-book-open-variant',
+    to: '/knowledge-base',
   },
   {
-    title: 'core.navigation.config',
-    icon: 'mdi-cog',
-    to: '/config',
+    title: 'core.navigation.persona',
+    icon: 'mdi-heart',
+    to: '/persona'
   },
   {
-    title: 'core.navigation.chat',
-    icon: 'mdi-chat',
-    to: '/chat'
-  },
-  {
-    title: 'core.navigation.conversation',
-    icon: 'mdi-database',
-    to: '/conversation'
-  },
-  {
-    title: 'core.navigation.sessionManagement',
-    icon: 'mdi-account-group',
-    to: '/session-management'
-  },
-  {
-    title: 'core.navigation.console',
-    icon: 'mdi-console',
-    to: '/console'
-  },
+    title: 'core.navigation.groups.more',
+    icon: 'mdi-dots-horizontal',
+    children: [
+      {
+        title: 'core.navigation.conversation',
+        icon: 'mdi-database',
+        to: '/conversation'
+      },
+      {
+        title: 'core.navigation.sessionManagement',
+        icon: 'mdi-pencil-ruler',
+        to: '/session-management'
+      },
+      {
+        title: 'core.navigation.cron',
+        icon: 'mdi-clock-outline',
+        to: '/cron'
+      },
+      {
+        title: 'core.navigation.subagent',
+        icon: 'mdi-vector-link',
+        to: '/subagent'
+      },
+      {
+        title: 'core.navigation.dashboard',
+        icon: 'mdi-view-dashboard',
+        to: '/dashboard/default'
+      },
+      {
+        title: 'core.navigation.console',
+        icon: 'mdi-console',
+        to: '/console'
+      },
+      {
+        title: 'core.navigation.trace',
+        icon: 'mdi-timeline-text-outline',
+        to: '/trace'
+      },
+    ]
+  }
   // {
   //   title: 'Project ATRI',
   //   icon: 'mdi-grain',

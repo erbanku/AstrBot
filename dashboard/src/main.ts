@@ -18,24 +18,38 @@ setupI18n().then(() => {
   
   const app = createApp(App);
   app.use(router);
-  app.use(createPinia());
+  const pinia = createPinia();
+  app.use(pinia);
   app.use(print);
   app.use(VueApexCharts);
   app.use(vuetify);
   app.use(confirmPlugin);
   app.mount('#app');
+  
+  // 挂载后同步 Vuetify 主题
+  import('./stores/customizer').then(({ useCustomizerStore }) => {
+    const customizer = useCustomizerStore(pinia);
+    vuetify.theme.global.name.value = customizer.uiTheme;
+  });
 }).catch(error => {
   console.error('❌ 新i18n系统初始化失败:', error);
   
   // 即使i18n初始化失败，也要挂载应用（使用回退机制）
   const app = createApp(App);
   app.use(router);
-  app.use(createPinia());
+  const pinia = createPinia();
+  app.use(pinia);
   app.use(print);
   app.use(VueApexCharts);
   app.use(vuetify);
   app.use(confirmPlugin);
   app.mount('#app');
+  
+  // 挂载后同步 Vuetify 主题
+  import('./stores/customizer').then(({ useCustomizerStore }) => {
+    const customizer = useCustomizerStore(pinia);
+    vuetify.theme.global.name.value = customizer.uiTheme;
+  });
 });
 
 
@@ -47,8 +61,22 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+// Keep fetch() calls consistent with axios by automatically attaching the JWT.
+// Some parts of the UI use fetch directly; without this, those requests will 401.
+const _origFetch = window.fetch.bind(window);
+window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  const token = localStorage.getItem('token');
+  if (!token) return _origFetch(input, init);
+
+  const headers = new Headers(init?.headers || (typeof input !== 'string' && 'headers' in input ? (input as Request).headers : undefined));
+  if (!headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return _origFetch(input, { ...init, headers });
+};
+
 loader.config({
   paths: {
-    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs',
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.54.0/min/vs',
   },
 })

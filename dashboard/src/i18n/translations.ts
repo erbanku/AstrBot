@@ -7,6 +7,7 @@ import zhCNActions from './locales/zh-CN/core/actions.json';
 import zhCNStatus from './locales/zh-CN/core/status.json';
 import zhCNNavigation from './locales/zh-CN/core/navigation.json';
 import zhCNHeader from './locales/zh-CN/core/header.json';
+import zhCNShared from './locales/zh-CN/core/shared.json';
 
 import zhCNChat from './locales/zh-CN/features/chat.json';
 import zhCNExtension from './locales/zh-CN/features/extension.json';
@@ -16,17 +17,25 @@ import zhCNToolUse from './locales/zh-CN/features/tool-use.json';
 import zhCNProvider from './locales/zh-CN/features/provider.json';
 import zhCNPlatform from './locales/zh-CN/features/platform.json';
 import zhCNConfig from './locales/zh-CN/features/config.json';
+import zhCNConfigMetadata from './locales/zh-CN/features/config-metadata.json';
 import zhCNConsole from './locales/zh-CN/features/console.json';
+import zhCNTrace from './locales/zh-CN/features/trace.json';
 import zhCNAbout from './locales/zh-CN/features/about.json';
 import zhCNSettings from './locales/zh-CN/features/settings.json';
 import zhCNAuth from './locales/zh-CN/features/auth.json';
 import zhCNChart from './locales/zh-CN/features/chart.json';
 import zhCNDashboard from './locales/zh-CN/features/dashboard.json';
+import zhCNCron from './locales/zh-CN/features/cron.json';
 import zhCNAlkaidIndex from './locales/zh-CN/features/alkaid/index.json';
 import zhCNAlkaidKnowledgeBase from './locales/zh-CN/features/alkaid/knowledge-base.json';
 import zhCNAlkaidMemory from './locales/zh-CN/features/alkaid/memory.json';
+import zhCNKnowledgeBaseIndex from './locales/zh-CN/features/knowledge-base/index.json';
+import zhCNKnowledgeBaseDetail from './locales/zh-CN/features/knowledge-base/detail.json';
+import zhCNKnowledgeBaseDocument from './locales/zh-CN/features/knowledge-base/document.json';
 import zhCNPersona from './locales/zh-CN/features/persona.json';
 import zhCNMigration from './locales/zh-CN/features/migration.json';
+import zhCNCommand from './locales/zh-CN/features/command.json';
+import zhCNSubagent from './locales/zh-CN/features/subagent.json';
 
 import zhCNErrors from './locales/zh-CN/messages/errors.json';
 import zhCNSuccess from './locales/zh-CN/messages/success.json';
@@ -38,6 +47,7 @@ import enUSActions from './locales/en-US/core/actions.json';
 import enUSStatus from './locales/en-US/core/status.json';
 import enUSNavigation from './locales/en-US/core/navigation.json';
 import enUSHeader from './locales/en-US/core/header.json';
+import enUSShared from './locales/en-US/core/shared.json';
 
 import enUSChat from './locales/en-US/features/chat.json';
 import enUSExtension from './locales/en-US/features/extension.json';
@@ -47,17 +57,25 @@ import enUSToolUse from './locales/en-US/features/tool-use.json';
 import enUSProvider from './locales/en-US/features/provider.json';
 import enUSPlatform from './locales/en-US/features/platform.json';
 import enUSConfig from './locales/en-US/features/config.json';
+import enUSConfigMetadata from './locales/en-US/features/config-metadata.json';
 import enUSConsole from './locales/en-US/features/console.json';
+import enUSTrace from './locales/en-US/features/trace.json';
 import enUSAbout from './locales/en-US/features/about.json';
 import enUSSettings from './locales/en-US/features/settings.json';
 import enUSAuth from './locales/en-US/features/auth.json';
 import enUSChart from './locales/en-US/features/chart.json';
 import enUSDashboard from './locales/en-US/features/dashboard.json';
+import enUSCron from './locales/en-US/features/cron.json';
 import enUSAlkaidIndex from './locales/en-US/features/alkaid/index.json';
 import enUSAlkaidKnowledgeBase from './locales/en-US/features/alkaid/knowledge-base.json';
 import enUSAlkaidMemory from './locales/en-US/features/alkaid/memory.json';
+import enUSKnowledgeBaseIndex from './locales/en-US/features/knowledge-base/index.json';
+import enUSKnowledgeBaseDetail from './locales/en-US/features/knowledge-base/detail.json';
+import enUSKnowledgeBaseDocument from './locales/en-US/features/knowledge-base/document.json';
 import enUSPersona from './locales/en-US/features/persona.json';
 import enUSMigration from './locales/en-US/features/migration.json';
+import enUSCommand from './locales/en-US/features/command.json';
+import enUSSubagent from './locales/en-US/features/subagent.json';
 
 import enUSErrors from './locales/en-US/messages/errors.json';
 import enUSSuccess from './locales/en-US/messages/success.json';
@@ -71,7 +89,8 @@ export const translations = {
       actions: zhCNActions,
       status: zhCNStatus,
       navigation: zhCNNavigation,
-      header: zhCNHeader
+      header: zhCNHeader,
+      shared: zhCNShared
     },
     features: {
       chat: zhCNChat,
@@ -82,19 +101,29 @@ export const translations = {
       provider: zhCNProvider,
       platform: zhCNPlatform,
       config: zhCNConfig,
+      'config-metadata': zhCNConfigMetadata,
       console: zhCNConsole,
+      trace: zhCNTrace,
       about: zhCNAbout,
       settings: zhCNSettings,
       auth: zhCNAuth,
       chart: zhCNChart,
       dashboard: zhCNDashboard,
+      cron: zhCNCron,
       alkaid: {
         index: zhCNAlkaidIndex,
         'knowledge-base': zhCNAlkaidKnowledgeBase,
         memory: zhCNAlkaidMemory
       },
+      'knowledge-base': {
+        index: zhCNKnowledgeBaseIndex,
+        detail: zhCNKnowledgeBaseDetail,
+        document: zhCNKnowledgeBaseDocument
+      },
       persona: zhCNPersona,
-      migration: zhCNMigration
+      migration: zhCNMigration,
+      command: zhCNCommand,
+      subagent: zhCNSubagent
     },
     messages: {
       errors: zhCNErrors,
@@ -108,7 +137,8 @@ export const translations = {
       actions: enUSActions,
       status: enUSStatus,
       navigation: enUSNavigation,
-      header: enUSHeader
+      header: enUSHeader,
+      shared: enUSShared
     },
     features: {
       chat: enUSChat,
@@ -119,19 +149,29 @@ export const translations = {
       provider: enUSProvider,
       platform: enUSPlatform,
       config: enUSConfig,
+      'config-metadata': enUSConfigMetadata,
       console: enUSConsole,
+      trace: enUSTrace,
       about: enUSAbout,
       settings: enUSSettings,
       auth: enUSAuth,
       chart: enUSChart,
       dashboard: enUSDashboard,
+      cron: enUSCron,
       alkaid: {
         index: enUSAlkaidIndex,
         'knowledge-base': enUSAlkaidKnowledgeBase,
         memory: enUSAlkaidMemory
       },
+      'knowledge-base': {
+        index: enUSKnowledgeBaseIndex,
+        detail: enUSKnowledgeBaseDetail,
+        document: enUSKnowledgeBaseDocument
+      },
       persona: enUSPersona,
-      migration: enUSMigration
+      migration: enUSMigration,
+      command: enUSCommand,
+      subagent: enUSSubagent
     },
     messages: {
       errors: enUSErrors,
